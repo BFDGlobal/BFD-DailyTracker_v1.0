@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Production Daily Tracker</title>
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <style>
+    body {
+      padding: 10px;
+      background-color: #f8f9fa;
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 600;
+      color: #212529;
+    }
+
+    .table-container {
+      background-color: #fff;
+      overflow-x: auto;
+      max-height: 80vh;
+      max-width: 100vw;
+      margin: 0 auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto; /* Let browser determine column width */
+      font-size: 11px;
+      color: #202124;
+    }
+
+    th, td {
+      border: 1px solid #e0e0e0;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: middle;
+      white-space: pre-wrap;         /* Wrap text like Google Sheets */
+      word-break: break-word;        /* Break long words */
+    }
+
+    thead th {
+      background-color: #f1f3f4;
+      color: #202124;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      text-align: center;
+    }
+
+    tbody tr:hover {
+      background-color: #e8f0fe;
+      transition: background-color 0.15s ease-in-out;
+    }
+
+    @media (max-width: 768px) {
+      table {
+        font-size: 10px;
+      }
+
+      th, td {
+        padding: 4px 6px;
+      }
+    }
+
+    /* Custom style for center-aligning merged cells */
+    .center-align {
+      text-align: center;
+      vertical-align: middle; /* Ensures middle alignment */
+    }
+
+    /* Right alignment for merged cells */
+    .text-end {
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Production Daily Tracker</h1>
+
+  <div class="container table-container">
+    <table id="sheet1Data" class="table table-bordered table-hover">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const sheet1URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnJj8GkeslSmWLGQT6yCHezQG7nHyu4SPSyPcsFdn6qdrs6RUn1BIjM23856i_PrfIKxChbMF7t3ON/pub?output=csv";
+
+    function updateTable(data) {
+      const rows = data.trim().split("\n");
+      const $thead = $("#sheet1Data thead");
+      const $tbody = $("#sheet1Data tbody");
+      $thead.empty();
+      $tbody.empty();
+
+      rows.forEach((row, rowIndex) => {
+        const cells = row.split(",");
+        const tag = rowIndex === 0 ? "th" : "td";
+        let rowHtml = cells.map((cell, index) => {
+          // Merge column A (rows 1 to 2) with rowspan="2" for row 1
+          if (rowIndex === 0 && index === 0) {
+            return `<${tag} rowspan="2" class="center-align">${cell}</${tag}>`; // Merge column A from row 1 to 2
+          }
+
+          // Merge columns I to Q in the first row
+          if (rowIndex === 0 && index >= 8 && index <= 16) {
+            if (index === 8) {
+              return `<${tag} colspan="9" class="center-align">${cell}</${tag}>`; // Merge I to Q
+            }
+            return ""; // Skip rendering other cells in this range for row 1
+          }
+
+          // Merge columns I to K (rows 2 to 3) and center-align
+          if (rowIndex === 1 && index >= 8 && index <= 10) {
+            if (index === 8) {
+              return `<${tag} colspan="3" class="center-align">${cell}</${tag}>`; // Merge columns I to K in row 2 with center alignment
+            }
+            return ""; // Skip other columns for row 2 in this range
+          }
+
+          // Merge columns L to N in row 2
+          if (rowIndex === 1 && index >= 11 && index <= 13) {
+            if (index === 11) {
+              return `<${tag} colspan="3" class="center-align">${cell}</${tag}>`; // Merge columns L to N in row 2
+            }
+            return ""; // Skip other columns for row 2 in this range
+          }
+
+          // Merge columns O to Q in row 2
+          if (rowIndex === 1 && index >= 14 && index <= 16) {
+            if (index === 14) {
+              return `<${tag} colspan="3" class="center-align">${cell}</${tag}>`; // Merge columns O to Q in row 2
+            }
+            return ""; // Skip other columns for row 2 in this range
+          }
+
+          // **Display columns R to Z** (Index 17 to 21)
+          if (rowIndex !== 0 && index >= 17 && index <= 21) {
+            return `<${tag} class="center-align">${cell}</${tag}>`; // Display cells R to Z with center alignment
+          }
+
+          return `<${tag}>${cell}</${tag}>`;
+        }).join("");
+
+        if (rowIndex === 0) {
+          $thead.append(`<tr>${rowHtml}</tr>`);
+        } else {
+          $tbody.append(`<tr>${rowHtml}</tr>`);
+        }
+      });
+    }
+
+    // Load once on page load
+    $.get(sheet1URL, updateTable);
+  </script>
+
+</body>
+</html>
